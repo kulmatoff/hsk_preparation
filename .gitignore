@@ -14,3 +14,7 @@
 .cxx
 local.properties
 .kotlin/
+
+# Backend
+backend/.venv/
+backend/.aws-sam/

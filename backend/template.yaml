@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Backend for Muse — HSK/CSCA preparation app (courses, lessons, auth)
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 10
+    MemorySize: 256
+    Environment:
+      Variables:
+        CONTENT_TABLE: !Ref ContentTable
+
+Resources:
+
+  # ---------- Database ----------
+  ContentTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: muse-content
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: entity
+          AttributeType: S
+        - AttributeName: id
+          AttributeType: N
+      KeySchema:
+        - AttributeName: entity
+          KeyType: HASH
+        - AttributeName: id
+          KeyType: RANGE
+
+  # ---------- API ----------
+  ContentApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - '*'
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ContentTable
+      Events:
+        GetVersion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ContentApi
+            Path: /content/version
+            Method: GET
+        GetCourses:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ContentApi
+            Path: /courses
+            Method: GET
+        GetChapters:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ContentApi
+            Path: /chapters
+            Method: GET
+        GetLessons:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ContentApi
+            Path: /lessons
+            Method: GET
+
+  # ---------- Auth (Cognito) ----------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: muse-users
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireUppercase: false
+          RequireSymbols: false
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: muse-android
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+Outputs:
+  ApiUrl:
+    Description: Base URL for the Android app (RetrofitClient BASE_URL)
+    Value: !Sub 'https://${ContentApi}.execute-api.${AWS::Region}.amazonaws.com/'
+  ContentTableName:
+    Value: !Ref ContentTable
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
