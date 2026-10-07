@@ -10,12 +10,18 @@ import com.example.muse.ui.screens.HomeworkScreen
 import com.example.muse.ui.screens.MainPage
 import com.example.muse.ui.screens.SubjectScreen
 import com.example.muse.ui.screens.TopicScreen
+import com.example.muse.ui.screens.auth.LoginScreen
+import com.example.muse.ui.screens.auth.ProfileScreen
+import com.example.muse.ui.screens.auth.RegisterScreen
 
 object Routes {
     const val HOME = "home"
     const val HOMEWORK = "homework"
     const val SUBJECT = "subject/{subjectId}"
     const val TOPIC = "topic/{subjectId}/{topicIndex}"
+    const val PROFILE = "profile"
+    const val LOGIN = "login"
+    const val REGISTER = "register"
 
     fun subject(subjectId: String) = "subject/$subjectId"
     fun topic(subjectId: String, topicIndex: Int) = "topic/$subjectId/$topicIndex"
@@ -34,6 +40,9 @@ fun AppNavigation() {
                 onSubjectClick = { subjectId ->
                     navController.navigate(Routes.subject(subjectId))
                 },
+                onProfileClick = {
+                    navController.navigate(Routes.PROFILE)
+                },
                 onActionClick = { action ->
                     when (action) {
                         "homework" -> navController.navigate(Routes.HOMEWORK)
@@ -45,6 +54,33 @@ fun AppNavigation() {
 
         composable(Routes.HOMEWORK) {
             HomeworkScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.PROFILE) {
+            ProfileScreen(
+                onBack = { navController.popBackStack() },
+                onLoginClick = { navController.navigate(Routes.LOGIN) },
+                onRegisterClick = { navController.navigate(Routes.REGISTER) }
+            )
+        }
+
+        composable(Routes.LOGIN) {
+            LoginScreen(
+                onBack = { navController.popBackStack() },
+                onRegisterClick = { navController.navigate(Routes.REGISTER) },
+                onSuccess = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.REGISTER) {
+            RegisterScreen(
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    // Возвращаемся на профиль: после REGISTER в стеке лежит LOGIN или PROFILE,
+                    // сессия уже создана — экран профиля сам покажет вошедшее состояние.
+                    navController.popBackStack(Routes.PROFILE, inclusive = false)
+                }
+            )
         }
 
         composable(
