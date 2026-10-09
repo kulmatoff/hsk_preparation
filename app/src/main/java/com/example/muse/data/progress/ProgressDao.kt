@@ -40,4 +40,10 @@ interface ProgressDao {
 
     @Query("SELECT COUNT(*) FROM homework_tasks")
     suspend fun homeworkCount(): Int
+
+    @Query("SELECT DISTINCT subjectId FROM homework_tasks")
+    suspend fun homeworkSubjectIds(): List<String>
+
+    @Query("DELETE FROM homework_tasks")
+    suspend fun deleteAllHomework()
 }

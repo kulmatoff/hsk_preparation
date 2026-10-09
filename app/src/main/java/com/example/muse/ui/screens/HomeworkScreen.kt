@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.muse.data.DemoContent
+import com.example.muse.data.content.ContentProvider
 import com.example.muse.data.progress.HomeworkTaskEntity
 import com.example.muse.ui.components.BackRow
 import com.example.muse.ui.components.CircleIcon
@@ -59,6 +59,7 @@ fun HomeworkScreen(
     )
 ) {
     val homework by progressViewModel.homework.collectAsStateWithLifecycle()
+    val subjects by ContentProvider.subjects.collectAsStateWithLifecycle()
     val pendingCount = homework.count { !it.done }
 
     // Сначала невыполненные, внутри групп — по предмету и теме
@@ -122,9 +123,9 @@ fun HomeworkScreen(
                     )
                 } else {
                     LazyColumn {
-                        // Группировка по предметам с сохранением порядка из DemoContent
+                        // Группировка по предметам с сохранением порядка из ContentProvider
                         val bySubject = ordered.groupBy { it.subjectId }
-                        DemoContent.subjects.forEach { subject ->
+                        subjects.forEach { subject ->
                             val tasks = bySubject[subject.id] ?: return@forEach
                             val style = styleFor(subject)
 

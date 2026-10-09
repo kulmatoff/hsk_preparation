@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.muse.data.DemoContent
+import com.example.muse.data.content.ContentProvider
 import com.example.muse.ui.components.BackRow
 import com.example.muse.ui.components.MaterialRow
 import com.example.muse.ui.components.SectionTitle
@@ -65,7 +65,8 @@ fun TopicScreen(
     onVideoClick: () -> Unit = {},
     onMaterialClick: (String) -> Unit = {}
 ) {
-    val subject = DemoContent.subjectById(subjectId)
+    val subjects by ContentProvider.subjects.collectAsStateWithLifecycle()
+    val subject = subjects.firstOrNull { it.id == subjectId }
     val topic = subject?.topics?.getOrNull(topicIndex)
     val progressViewModel: ProgressViewModel = viewModel(
         factory = ProgressViewModel.factory(LocalContext.current.applicationContext)

@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.muse.data.DemoContent
+import com.example.muse.data.content.ContentProvider
 import com.example.muse.ui.components.BackRow
 import com.example.muse.ui.components.CircleIcon
 import com.example.muse.ui.components.ProgressCard
@@ -40,7 +40,7 @@ import com.example.muse.ui.theme.MuseTheme
 /**
  * Экран предмета: шапка с иконкой, карточка прогресса и список тем.
  * Универсален — один и тот же экран для всех предметов (математика,
- * физика, химия, китайский), отличие только в данных [DemoContent].
+ * физика, химия, китайский), данные приходят из [ContentProvider].
  */
 @Composable
 fun SubjectScreen(
@@ -48,7 +48,8 @@ fun SubjectScreen(
     onBack: () -> Unit = {},
     onTopicClick: (Int) -> Unit = {}
 ) {
-    val subject = DemoContent.subjectById(subjectId)
+    val subjects by ContentProvider.subjects.collectAsStateWithLifecycle()
+    val subject = subjects.firstOrNull { it.id == subjectId }
     val progressViewModel: ProgressViewModel = viewModel(
         factory = ProgressViewModel.factory(LocalContext.current.applicationContext)
     )

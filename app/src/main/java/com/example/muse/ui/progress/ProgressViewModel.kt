@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.muse.data.content.ContentProvider
 import com.example.muse.data.progress.HomeworkTaskEntity
 import com.example.muse.data.progress.ProgressProvider
 import com.example.muse.data.progress.ProgressRepository
@@ -23,7 +24,12 @@ import kotlinx.coroutines.launch
 class ProgressViewModel(private val repository: ProgressRepository) : ViewModel() {
 
     init {
-        viewModelScope.launch { repository.seedIfNeeded() }
+        // Задания следуют за контентом: демо → живые данные с бэкенда.
+        viewModelScope.launch {
+            ContentProvider.subjects.collect { subjects ->
+                repository.seedHomework(subjects)
+            }
+        }
     }
 
     /** subjectId -> список пройденных номеров тем. */

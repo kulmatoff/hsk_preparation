@@ -2,13 +2,13 @@ package com.example.muse.data.progress
 
 import android.content.Context
 import androidx.room.Room
-import com.example.muse.data.DemoContent
+import com.example.muse.data.SubjectContent
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Репозиторий прогресса пользователя.
  * Источник данных — локальная Room-БД; контент (названия тем, заданий)
- * берётся из DemoContent до появления бэкенда.
+ * приходит из ContentProvider (бэкенд, с запасным DemoContent).
  */
 class ProgressRepository(private val dao: ProgressDao) {
 
@@ -34,12 +34,19 @@ class ProgressRepository(private val dao: ProgressDao) {
 
     suspend fun setHomeworkDone(id: String, done: Boolean) = dao.setHomeworkDone(id, done)
 
-    /** Первый запуск: заполняем домашние задания из демо-контента. */
-    suspend fun seedIfNeeded() {
-        if (dao.homeworkCount() > 0) return
+    /**
+     * Заполняет домашние задания из актуального контента.
+     * Если набор предметов изменился (обновление с бэкенда) — пересоздаёт список.
+     * Внимание: пересоздание сбрасывает отметки «выполнено».
+     */
+    suspend fun seedHomework(subjects: List<SubjectContent>) {
+        val wantedIds = subjects.map { it.id }.toSet()
+        if (dao.homeworkCount() > 0 && dao.homeworkSubjectIds().toSet() == wantedIds) return
+
+        dao.deleteAllHomework()
 
         val tasks = mutableListOf<HomeworkTaskEntity>()
-        for (subject in DemoContent.subjects) {
+        for (subject in subjects) {
             for ((topicIndex, topic) in subject.topics.withIndex()) {
                 for (n in 1..topic.homeworkTasks) {
                     val title = if (n <= topic.subtopics.size) {
@@ -61,10 +68,6 @@ class ProgressRepository(private val dao: ProgressDao) {
             }
         }
         dao.insertHomework(tasks)
-
-        // Стартовый прогресс по дизайну: математика — 2 из 6 тем пройдено.
-        dao.upsertProgress(TopicProgressEntity("math", 0, System.currentTimeMillis()))
-        dao.upsertProgress(TopicProgressEntity("math", 1, System.currentTimeMillis()))
     }
 }
 

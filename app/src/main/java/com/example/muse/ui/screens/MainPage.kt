@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.muse.data.DemoContent
+import com.example.muse.data.content.ContentProvider
 import com.example.muse.ui.components.ActionRow
 import com.example.muse.ui.components.HeroBanner
 import com.example.muse.ui.components.ProfileAvatar
@@ -73,6 +74,11 @@ fun MainPage(
     )
 ) {
     val pendingHomework by progressViewModel.pendingHomeworkCount.collectAsStateWithLifecycle()
+
+    // Живой контент: сначала демо, после синхронизации — данные с бэкенда
+    val context = LocalContext.current.applicationContext
+    val subjects by ContentProvider.subjects.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { ContentProvider.refresh(context) }
     Scaffold { padding ->
         Surface(
             modifier = Modifier
@@ -113,7 +119,7 @@ fun MainPage(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 HeroBanner(
-                    onStartClick = { onSubjectClick(DemoContent.subjects.first().id) },
+                    onStartClick = { subjects.firstOrNull()?.let { onSubjectClick(it.id) } },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -123,7 +129,7 @@ fun MainPage(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Сетка предметов 2 в ряд
-                DemoContent.subjects.chunked(2).forEach { rowSubjects ->
+                subjects.chunked(2).forEach { rowSubjects ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)

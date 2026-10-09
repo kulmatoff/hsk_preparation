@@ -1,21 +1,14 @@
 package com.example.muse
 
 import android.content.Context
-import androidx.room.Room
-import com.example.muse.data.local.AppDatabase
-import com.example.muse.data.network.RetrofitClient
+import com.example.muse.data.content.ContentProvider
 import com.example.muse.data.repository.ContentRepository
 
+/**
+ * Оставлено для совместимости: реальные синглтоны живут в [ContentProvider],
+ * чтобы вся Room-БД была одна на приложение.
+ */
 class AppContainer(context: Context) {
 
-    private val database = Room.databaseBuilder(
-        context,
-        AppDatabase::class.java,
-        "muse.db"
-    ).build()
-
-    val contentRepository = ContentRepository(
-        api = RetrofitClient.api,
-        database = database
-    )
+    val contentRepository: ContentRepository = ContentProvider.repository(context)
 }
